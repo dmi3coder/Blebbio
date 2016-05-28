@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.dmi3coder.sprites.Blebby;
 import com.dmi3coder.sprites.Bubble;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -19,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,12 +39,16 @@ public class Treegrassio extends ApplicationAdapter {
 	Bubble player;
 	Texture playerBubble;
 	Texture friendlyBubble;
+	Texture blebbyTexture;
 	HashMap<String,Bubble> friendlyPlayers;
+	ArrayList<Blebby> blebbies;
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		playerBubble = new Texture("bubble.png");
+		blebbyTexture = new Texture("blebby.png");
+		blebbies = new ArrayList<Blebby>();
 		friendlyBubble = playerBubble;
 		friendlyPlayers = new HashMap<String, Bubble>();
 		//Camera used for Box2D related images
@@ -59,18 +65,12 @@ public class Treegrassio extends ApplicationAdapter {
 		}
 	}
 
-	//methods for making scaling easier
-	public float scale(float valueToBeScaled) {
-		return valueToBeScaled/SCALE;
-	}
-
 
 
 	@Override
 	public void render () {
 		camera.update();
 		hudCamera.update();
-
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		handleInput(Gdx.graphics.getDeltaTime());
@@ -82,6 +82,13 @@ public class Treegrassio extends ApplicationAdapter {
 		}
 		for(HashMap.Entry<String,Bubble> entry : friendlyPlayers.entrySet()){
 			entry.getValue().draw(batch);
+		}
+		for (int i = 0;i < blebbies.size();i++) {
+			if(player.contains(blebbies.get(i).getX(),blebbies.get(i).getY())){
+				blebbies.remove(i);
+				player.setSize(player.getSize()+0.01f);
+			}else
+				blebbies.get(i).draw(batch);
 		}
 		batch.end();
 	}
@@ -96,11 +103,10 @@ public class Treegrassio extends ApplicationAdapter {
 				player.setPosition(player.getX(), player.getY() + (200 * deltaTime));
 			}else if(Gdx.input.isKeyPressed(Input.Keys.DOWN)){
 				player.setPosition(player.getX(), player.getY() + (-200 * deltaTime));
-			}else if(Gdx.input.isKeyPressed(Input.Keys.A)){
-				player.setSize(player.getSize() + 10);
 			}
-			camera.position.x = player.getX();
-			camera.position.y = player.getY();
+			camera.position.x = player.getX() +player.getWidth()/2;
+			camera.position.y = player.getY() +player.getHeight()/2;
+			camera.zoom = player.getSize();
 		}
 	}
 
@@ -199,6 +205,25 @@ public class Treegrassio extends ApplicationAdapter {
 						coopPlayer.setPosition(position.x,position.y);
 						friendlyPlayers.put(objects.getJSONObject(i).getString("id"),coopPlayer);
 					}
+				}catch (JSONException e){
+
+				}
+			}
+		}).on("getBlebbies", new Emitter.Listener() {
+			@Override
+			public void call(Object... args) {
+				JSONArray blebbiesJson = (JSONArray)args[0];
+				ArrayList<Blebby> addingList = new ArrayList<Blebby>(blebbiesJson.length());
+				try{
+					for (int i = 0; i < blebbiesJson.length(); i++) {
+						Blebby blebby = new Blebby(blebbyTexture);
+						Vector2 position = new Vector2();
+						position.x = ((Double)blebbiesJson.getJSONObject(i).getDouble("x")).floatValue();
+						position.y = ((Double)blebbiesJson.getJSONObject(i).getDouble("y")).floatValue();
+						blebby.setPosition(position.x,position.y);
+						addingList.add(blebby);
+					}
+					blebbies.addAll(addingList);
 				}catch (JSONException e){
 
 				}

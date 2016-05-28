@@ -2,15 +2,21 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var players = [];
+var blebbies = [];
 
 server.listen(8081, function(){
+    for(var i = 0; i< 10000; i++){
+        blebbies.push(new blebby(Math.random()*10000 -5000,Math.random()*10000 -5000));
+    }
     console.log("server running");
+
 });
 
 io.on('connection',function (socket) {
     console.log("player connected!");
     socket.emit('socketID',{ id : socket.id});
     socket.emit('getPlayers',players);
+    socket.emit('getBlebbies',blebbies);
     socket.on('playerMoved',function (data) {
        data.id = socket.id;
         socket.broadcast.emit('playerMoved',data);
@@ -38,6 +44,11 @@ io.on('connection',function (socket) {
     });
     players.push(new player(socket.id,0,0));
 });
+
+function blebby(x, y) {
+    this.x = x;
+    this.y = y;
+}
 
 function player(id, x, y) {
     this.id = id;
