@@ -39,6 +39,7 @@ public class Treegrassio extends ApplicationAdapter {
 
 
 	Bubble player;
+	String playerId;
 	Texture playerBubble;
 	Texture friendlyBubble;
 	Texture blebbyTexture;
@@ -99,6 +100,19 @@ public class Treegrassio extends ApplicationAdapter {
 					blebby.draw(batch);
 				else
 					blebbies.remove(entry.getKey());
+			}
+			for(HashMap.Entry<String, Bubble> entry: friendlyPlayers.entrySet()){
+				Bubble bubble = entry.getValue();
+				if(player.contains(bubble.getX() + bubble.getWidth()/2 ,bubble.getY() + bubble.getHeight()/2)){
+					if(player.getSize()>bubble.getSize()*1.2){
+						JSONObject jsonObject = new JSONObject();
+						jsonObject.put("id",entry.getKey());
+						jsonObject.put("size",bubble.getSize());
+						socket.emit("eatPlayer",jsonObject);
+						player.increaseSize(bubble.getSize());
+						friendlyPlayers.remove(entry.getKey());
+					}
+				}
 			}
 		}
 		catch (Exception e){
@@ -168,6 +182,7 @@ public class Treegrassio extends ApplicationAdapter {
 					JSONObject data = (JSONObject)args.clone()[0];
 					String id = data.getString("id");
 					Gdx.app.log(TAG,"My id: " + id);
+					playerId = id;
 				} catch (JSONException e) {
 					Gdx.app.log(TAG,"My id: " + e.toString());
 				}
@@ -220,7 +235,9 @@ public class Treegrassio extends ApplicationAdapter {
 						Vector2 position = new Vector2();
 						position.x = ((Double)objects.getJSONObject(i).getDouble("x")).floatValue();
 						position.y = ((Double)objects.getJSONObject(i).getDouble("y")).floatValue();
+						float size = ((Double)objects.getJSONObject(i).getDouble("size")).floatValue();
 						coopPlayer.setPosition(position.x,position.y);
+						coopPlayer.setSize(size);
 						friendlyPlayers.put(objects.getJSONObject(i).getString("id"),coopPlayer);
 					}
 				}catch (JSONException e){
@@ -254,18 +271,36 @@ public class Treegrassio extends ApplicationAdapter {
 				try {
 					id = blebbyJson.getString("id");
 					userId = blebbyJson.getString("user_id");
-					for (HashMap.Entry<String,Blebby> entry : blebbies.entrySet()) {
-						if(entry.getKey().equals(id)){
-							blebbies.get(entry.getKey()).setVisible(false);
-							friendlyPlayers.get(userId).increaseSize();
-						}
-					}
+					blebbies.get(id).setVisible(false);
+					friendlyPlayers.get(userId).increaseSize();
 				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}).on("eatPlayer", new Emitter.Listener() {
+			@Override
+			public void call(Object... args) {
+				JSONObject blebbyJson = (JSONObject)args[0];
+				String id, consumerId;
+				float size;
+				try {
+					id = blebbyJson.getString("id");
+					if(playerId.equals(id))
+						Gdx.app.exit();
+					size = friendlyPlayers.get(id).getSize();
+					consumerId = blebbyJson.getString("consumer_id");
+					friendlyPlayers.get(consumerId).increaseSize(size);
+					friendlyPlayers.remove(consumerId);
+
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 			}
 		});
 	}
+
+
 
 }

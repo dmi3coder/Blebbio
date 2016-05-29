@@ -42,12 +42,28 @@ io.on('connection',function (socket) {
         for(var i = 0;i<blebbies.length;i++){
         if(blebbies[i].id == data.id){
             blebbies.splice(i,1);
+            for(var j = 0;j<players.length;j++){
+                if(players[j].id == socket.id){
+                    players[j].size += 0.01;
+                }
+            }
             socket.broadcast.emit('eatBlebby',{id: data.id,user_id : socket.id});
-            socket.emit('eatBlebby',{id: data.id,user_id : socket.id});
         }
     }
     });
-    players.push(new player(socket.id,0,0));
+    socket.on('eatPlayer',function (data) {
+        for(var i = 0; i<players.length;i++){
+            if(players[i].id == data.id){
+                players.splice(i,1);
+                socket.broadcast.emit('eatPlayer',{id: data.id, consumer_id : socket.id});
+            }
+            else if(players[i].id == socket.id){
+                players[i].size += data.size;
+            }
+        }
+    });
+    players.push(new player(socket.id, 0.25 ,0,0));
+
 });
 
 function generateUUID(){
@@ -66,8 +82,9 @@ function blebby(id, x, y) {
     this.y = y;
 }
 
-function player(id, x, y) {
+function player(id, size, x, y) {
     this.id = id;
+    this.size = size;
     this.x = x;
     this.y = y;
 }
