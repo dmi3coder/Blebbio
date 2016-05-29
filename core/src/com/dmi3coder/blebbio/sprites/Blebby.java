@@ -1,4 +1,4 @@
-package com.dmi3coder.sprites;
+package com.dmi3coder.blebbio.sprites;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;

@@ -1,10 +1,9 @@
-package com.dmi3coder;
+package com.dmi3coder.blebbio;
 
 import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.dmi3coder.Treegrassio;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override

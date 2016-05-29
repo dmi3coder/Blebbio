@@ -1,18 +1,15 @@
-package com.dmi3coder;
+package com.dmi3coder.blebbio;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.dmi3coder.sprites.Blebby;
-import com.dmi3coder.sprites.Bubble;
+import com.badlogic.gdx.math.Vector3;
+import com.dmi3coder.blebbio.sprites.Blebby;
+import com.dmi3coder.blebbio.sprites.Bubble;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
@@ -20,12 +17,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.Map;
 
-public class Treegrassio extends ApplicationAdapter {
+public class Treegrassio extends ApplicationAdapter implements InputProcessor, GestureDetector.GestureListener {
 	private static final float UPDATE_TIME = 1/60f;
 	boolean removable = true;
 	float timer;
@@ -60,6 +54,11 @@ public class Treegrassio extends ApplicationAdapter {
 		//Camera used for HUD
 		hudCamera = new OrthographicCamera(WIDTH, HEIGHT);
 		hudCamera.position.set(WIDTH/2, HEIGHT/2, 0);
+		InputMultiplexer im = new InputMultiplexer();
+		GestureDetector gd = new GestureDetector(this);
+		im.addProcessor(gd);
+		im.addProcessor(this);
+		Gdx.input.setInputProcessor(im);
 		try {
 			connectSocket();
 			configSocketEvents();
@@ -302,5 +301,117 @@ public class Treegrassio extends ApplicationAdapter {
 	}
 
 
+	@Override
+	public boolean keyDown(int keycode) {
+		return false;
+	}
 
+	@Override
+	public boolean keyUp(int keycode) {
+		return false;
+	}
+
+	@Override
+	public boolean keyTyped(char character) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		double delta = Gdx.graphics.getDeltaTime();
+		Vector3 vector3 = getMousePosInGameWorld();
+		float posX = vector3.x - player.getX();
+		float posY = vector3.y - player.getY();
+		Vector2 vector2 = new Vector2(posX,posY);
+		Vector2 direction = new Vector2();
+		direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
+		direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
+		player.setPosition(
+				((Double)(player.getX()+(200*delta*direction.x))).floatValue(),
+				((Double)(player.getY()+(200*delta*direction.y))).floatValue()
+		);
+		return false;
+	}
+
+	Vector3 getMousePosInGameWorld() {
+		return camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+	}
+
+	@Override
+	public boolean scrolled(int amount) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(float x, float y, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean tap(float x, float y, int count, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean longPress(float x, float y) {
+		return false;
+	}
+
+	@Override
+	public boolean fling(float velocityX, float velocityY, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean pan(float x, float y, float deltaX, float deltaY) {
+		double delta = Gdx.graphics.getDeltaTime();
+		Vector3 vector3 = getMousePosInGameWorld();
+		float posX = vector3.x - player.getX();
+		float posY = vector3.y - player.getY();
+		Vector2 vector2 = new Vector2(posX,posY);
+		Vector2 direction = new Vector2();
+		direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
+		direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
+		player.setPosition(
+				((Double)(player.getX()+(200*delta*direction.x))).floatValue(),
+				((Double)(player.getY()+(200*delta*direction.y))).floatValue()
+		);
+		return false;
+	}
+
+	@Override
+	public boolean panStop(float x, float y, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean zoom(float initialDistance, float distance) {
+		return false;
+	}
+
+	@Override
+	public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) {
+		return false;
+	}
+
+	@Override
+	public void pinchStop() {
+
+	}
 }
