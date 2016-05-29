@@ -144,6 +144,7 @@ public class Treegrassio extends ApplicationAdapter {
 		super.dispose();
 		playerBubble.dispose();
 		friendlyBubble.dispose();
+		blebbyTexture.dispose();
 	}
 
 	private void connectSocket() throws Exception {
@@ -249,7 +250,6 @@ public class Treegrassio extends ApplicationAdapter {
 			@Override
 			public void call(Object... args) {
 				JSONObject blebbyJson = (JSONObject)args[0];
-				Gdx.app.log(TAG,"removed");
 				String id;
 				try {
 					id = blebbyJson.getString("id");
