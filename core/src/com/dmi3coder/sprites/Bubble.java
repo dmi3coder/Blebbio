@@ -26,7 +26,11 @@ public class Bubble extends Sprite {
         return false;
     }
 
-    public void setSize(float size){
+    public void increaseSize(){
+        setSize(getSize() + 0.01f);
+    }
+
+    private void setSize(float size){
         this.setSize(getWidth()/this.size*size,getHeight()/this.size*size);
         this.size = size;
     }

@@ -93,7 +93,7 @@ public class Treegrassio extends ApplicationAdapter {
 					jsonObject.put("id", entry.getKey());
 					blebbies.remove(entry.getKey());
 					socket.emit("eatBlebby", jsonObject);
-					player.setSize(player.getSize() + 0.01f);
+					player.increaseSize();
 
 				} else if(blebby.isVisibile())
 					blebby.draw(batch);
@@ -240,7 +240,6 @@ public class Treegrassio extends ApplicationAdapter {
 						position.y = ((Double)blebbiesJson.getJSONObject(i).getDouble("y")).floatValue();
 						blebby.setPosition(position.x,position.y);
 						addingList.put(blebbiesJson.getJSONObject(i).getString("id"),blebby);
-						Gdx.app.log(TAG,blebbiesJson.getJSONObject(i).getString("id"));
 					}
 					blebbies.putAll(addingList);
 				}catch (JSONException e){
@@ -251,13 +250,14 @@ public class Treegrassio extends ApplicationAdapter {
 			@Override
 			public void call(Object... args) {
 				JSONObject blebbyJson = (JSONObject)args[0];
-				String id;
+				String id, userId;
 				try {
 					id = blebbyJson.getString("id");
+					userId = blebbyJson.getString("user_id");
 					for (HashMap.Entry<String,Blebby> entry : blebbies.entrySet()) {
 						if(entry.getKey().equals(id)){
-							blebbies.remove(entry.getKey());
-							removable = true;
+							blebbies.get(entry.getKey()).setVisible(false);
+							friendlyPlayers.get(userId).increaseSize();
 						}
 					}
 				} catch (JSONException e) {

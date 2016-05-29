@@ -5,7 +5,7 @@ var players = [];
 var blebbies = [];
 
 server.listen(8081, function(){
-    for(var i = 0; i< 1000; i++){
+    for(var i = 0; i< 10000; i++){
         blebbies.push(new blebby(generateUUID(),Math.random()*10000 -5000,Math.random()*10000 -5000));
 
     }
@@ -41,7 +41,7 @@ io.on('connection',function (socket) {
     socket.on('eatBlebby',function (data) {
         for(var i = 0;i<blebbies.length;i++){
         if(blebbies[i].id == data.id){
-            blebbies.slice(i,1);
+            blebbies.splice(i,1);
             socket.broadcast.emit('eatBlebby',{id: data.id,user_id : socket.id});
             socket.emit('eatBlebby',{id: data.id,user_id : socket.id});
         }
