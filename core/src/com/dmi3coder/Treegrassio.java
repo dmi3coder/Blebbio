@@ -21,11 +21,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Treegrassio extends ApplicationAdapter {
 	private static final float UPDATE_TIME = 1/60f;
+	boolean removable = true;
 	float timer;
 	public static final String TAG = "SocketIO";
 	private static final int WIDTH = 1280;
@@ -41,14 +43,14 @@ public class Treegrassio extends ApplicationAdapter {
 	Texture friendlyBubble;
 	Texture blebbyTexture;
 	HashMap<String,Bubble> friendlyPlayers;
-	ArrayList<Blebby> blebbies;
+	HashMap<String,Blebby> blebbies;
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		playerBubble = new Texture("bubble.png");
 		blebbyTexture = new Texture("blebby.png");
-		blebbies = new ArrayList<Blebby>();
+		blebbies = new HashMap<String, Blebby>();
 		friendlyBubble = playerBubble;
 		friendlyPlayers = new HashMap<String, Bubble>();
 		//Camera used for Box2D related images
@@ -83,12 +85,23 @@ public class Treegrassio extends ApplicationAdapter {
 		for(HashMap.Entry<String,Bubble> entry : friendlyPlayers.entrySet()){
 			entry.getValue().draw(batch);
 		}
-		for (int i = 0;i < blebbies.size();i++) {
-			if(player.contains(blebbies.get(i).getX(),blebbies.get(i).getY())){
-				blebbies.remove(i);
-				player.setSize(player.getSize()+0.01f);
-			}else
-				blebbies.get(i).draw(batch);
+		try {
+			for (HashMap.Entry<String, Blebby> entry : blebbies.entrySet()) {
+				Blebby blebby = entry.getValue();
+				if (player.contains(blebby.getX(), blebby.getY())) {
+					JSONObject jsonObject = new JSONObject();
+						jsonObject.put("id", entry.getKey());
+						blebbies.remove(entry.getKey());
+					blebbies.remove(entry.getKey());
+					socket.emit("eatBlebby", jsonObject);
+					player.setSize(player.getSize() + 0.01f);
+
+				} else
+					blebby.draw(batch);
+			}
+		}
+		catch (Exception e){
+
 		}
 		batch.end();
 	}
@@ -106,7 +119,10 @@ public class Treegrassio extends ApplicationAdapter {
 			}
 			camera.position.x = player.getX() +player.getWidth()/2;
 			camera.position.y = player.getY() +player.getHeight()/2;
-			camera.zoom = player.getSize();
+			if(player.getSize()<1)
+				camera.zoom = 1f;
+			else
+				camera.zoom = player.getSize()*0.75f;
 		}
 	}
 
@@ -213,7 +229,7 @@ public class Treegrassio extends ApplicationAdapter {
 			@Override
 			public void call(Object... args) {
 				JSONArray blebbiesJson = (JSONArray)args[0];
-				ArrayList<Blebby> addingList = new ArrayList<Blebby>(blebbiesJson.length());
+				HashMap<String,Blebby> addingList = new HashMap<String, Blebby>(blebbiesJson.length());
 				try{
 					for (int i = 0; i < blebbiesJson.length(); i++) {
 						Blebby blebby = new Blebby(blebbyTexture);
@@ -221,12 +237,32 @@ public class Treegrassio extends ApplicationAdapter {
 						position.x = ((Double)blebbiesJson.getJSONObject(i).getDouble("x")).floatValue();
 						position.y = ((Double)blebbiesJson.getJSONObject(i).getDouble("y")).floatValue();
 						blebby.setPosition(position.x,position.y);
-						addingList.add(blebby);
+						addingList.put(blebbiesJson.getJSONObject(i).getString("id"),blebby);
+						Gdx.app.log(TAG,blebbiesJson.getJSONObject(i).getString("id"));
 					}
-					blebbies.addAll(addingList);
+					blebbies.putAll(addingList);
 				}catch (JSONException e){
 
 				}
+			}
+		}).on("eatBlebby", new Emitter.Listener() {
+			@Override
+			public void call(Object... args) {
+				JSONObject blebbyJson = (JSONObject)args[0];
+				Gdx.app.log(TAG,"removed");
+				String id;
+				try {
+					id = blebbyJson.getString("id");
+					for (HashMap.Entry<String,Blebby> entry : blebbies.entrySet()) {
+						if(entry.getKey().equals(id)){
+							blebbies.remove(entry.getKey());
+							removable = true;
+						}
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
 			}
 		});
 	}

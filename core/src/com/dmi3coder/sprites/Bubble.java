@@ -9,10 +9,11 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class Bubble extends Sprite {
     private Vector2 previousPosition;
-    private float size = 1f;
+    private float size = 0.25f;
 
     public Bubble(Texture texture){
         super(texture);
+        setSize(getWidth()/4,getHeight()/4);
         previousPosition = new Vector2(getX(),getY());
     }
 
