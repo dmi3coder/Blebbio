@@ -90,14 +90,15 @@ public class Treegrassio extends ApplicationAdapter {
 				Blebby blebby = entry.getValue();
 				if (player.contains(blebby.getX(), blebby.getY())) {
 					JSONObject jsonObject = new JSONObject();
-						jsonObject.put("id", entry.getKey());
-						blebbies.remove(entry.getKey());
+					jsonObject.put("id", entry.getKey());
 					blebbies.remove(entry.getKey());
 					socket.emit("eatBlebby", jsonObject);
 					player.setSize(player.getSize() + 0.01f);
 
-				} else
+				} else if(blebby.isVisibile())
 					blebby.draw(batch);
+				else
+					blebbies.remove(entry.getKey());
 			}
 		}
 		catch (Exception e){

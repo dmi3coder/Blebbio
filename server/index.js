@@ -49,6 +49,7 @@ io.on('connection',function (socket) {
     });
     players.push(new player(socket.id,0,0));
 });
+
 function generateUUID(){
     var d = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
