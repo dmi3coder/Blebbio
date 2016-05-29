@@ -5,12 +5,16 @@ var players = [];
 var blebbies = [];
 
 server.listen(8081, function(){
-    for(var i = 0; i< 10000; i++){
-        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -5000,Math.random()*10000 -5000));
+    for(var i = 0; i< 100; i++){
+        blebbies.push(new blebby(generateUUID(),Math.random()*1000 -500,Math.random()*1000 -500));
 
     }
     console.log("server running");
 
+});
+
+app.get('/test', function (req, res) {
+    res.end("go away");
 });
 
 io.on('connection',function (socket) {
