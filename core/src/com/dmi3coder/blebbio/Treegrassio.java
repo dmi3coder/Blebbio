@@ -20,7 +20,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 public class Treegrassio extends ApplicationAdapter implements InputProcessor, GestureDetector.GestureListener {
-	private static final float UPDATE_TIME = 1/60f;
+	private static final float UPDATE_TIME = 1/24f;
 	boolean removable = true;
 	float timer;
 	public static final String TAG = "SocketIO";
@@ -118,6 +118,26 @@ public class Treegrassio extends ApplicationAdapter implements InputProcessor, G
 
 		}
 		batch.end();
+		makeMove();
+	}
+
+	private void makeMove() {
+		try {
+			double delta = Gdx.graphics.getDeltaTime();
+			Vector3 vector3 = getMousePosInGameWorld();
+			float posX = vector3.x - player.getX();
+			float posY = vector3.y - player.getY();
+			Vector2 vector2 = new Vector2(posX, posY);
+			Vector2 direction = new Vector2();
+			direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
+			direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
+			player.setPosition(
+					((Double) (player.getX() + (100 * delta * direction.x))).floatValue(),
+					((Double) (player.getY() + (100 * delta * direction.y))).floatValue()
+			);
+		}catch (Exception e ){
+
+		}
 	}
 
 	private void handleInput(float deltaTime) {
@@ -136,7 +156,7 @@ public class Treegrassio extends ApplicationAdapter implements InputProcessor, G
 			if(player.getSize()<1)
 				camera.zoom = 1f;
 			else
-				camera.zoom = player.getSize()*0.75f;
+				camera.zoom = player.getSize()*1f;
 		}
 	}
 
@@ -333,19 +353,7 @@ public class Treegrassio extends ApplicationAdapter implements InputProcessor, G
 	}
 
 	@Override
-	public boolean mouseMoved(int screenX, int screenY) {
-		double delta = Gdx.graphics.getDeltaTime();
-		Vector3 vector3 = getMousePosInGameWorld();
-		float posX = vector3.x - player.getX();
-		float posY = vector3.y - player.getY();
-		Vector2 vector2 = new Vector2(posX,posY);
-		Vector2 direction = new Vector2();
-		direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
-		direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
-		player.setPosition(
-				((Double)(player.getX()+(200*delta*direction.x))).floatValue(),
-				((Double)(player.getY()+(200*delta*direction.y))).floatValue()
-		);
+	public boolean mouseMoved(int screenX, int screenY) {// TODO: 29/05/16 remove dublication
 		return false;
 	}
 
@@ -380,18 +388,6 @@ public class Treegrassio extends ApplicationAdapter implements InputProcessor, G
 
 	@Override
 	public boolean pan(float x, float y, float deltaX, float deltaY) {
-		double delta = Gdx.graphics.getDeltaTime();
-		Vector3 vector3 = getMousePosInGameWorld();
-		float posX = vector3.x - player.getX();
-		float posY = vector3.y - player.getY();
-		Vector2 vector2 = new Vector2(posX,posY);
-		Vector2 direction = new Vector2();
-		direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
-		direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
-		player.setPosition(
-				((Double)(player.getX()+(200*delta*direction.x))).floatValue(),
-				((Double)(player.getY()+(200*delta*direction.y))).floatValue()
-		);
 		return false;
 	}
 

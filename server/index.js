@@ -5,17 +5,14 @@ var players = [];
 var blebbies = [];
 
 server.listen(8081, function(){
-    for(var i = 0; i< 100; i++){
-        blebbies.push(new blebby(generateUUID(),Math.random()*1000 -500,Math.random()*1000 -500));
+    for(var i = 0; i< 3000; i++){
+        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -500,Math.random()*10000 -500));
 
     }
     console.log("server running");
 
 });
 
-app.get('/test', function (req, res) {
-    res.end("go away");
-});
 
 io.on('connection',function (socket) {
     console.log("player connected!");
@@ -48,7 +45,7 @@ io.on('connection',function (socket) {
             blebbies.splice(i,1);
             for(var j = 0;j<players.length;j++){
                 if(players[j].id == socket.id){
-                    players[j].size += 0.01;
+                    players[j].size += 0.005;
                 }
             }
             socket.broadcast.emit('eatBlebby',{id: data.id,user_id : socket.id});
@@ -66,7 +63,7 @@ io.on('connection',function (socket) {
             }
         }
     });
-    players.push(new player(socket.id, 0.25 ,0,0));
+    players.push(new player(socket.id, 0.05 ,0,0));
 
 });
 

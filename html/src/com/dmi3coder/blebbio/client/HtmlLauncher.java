@@ -1,4 +1,4 @@
-package com.dmi3coder.client;
+package com.dmi3coder.blebbio.client;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.gwt.GwtApplication;
