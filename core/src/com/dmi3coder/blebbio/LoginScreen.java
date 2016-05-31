@@ -3,11 +3,18 @@ package com.dmi3coder.blebbio;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -23,17 +30,33 @@ public class LoginScreen implements Screen {
     private Stage stage;
 
 
-    public LoginScreen(Treegrassio game, SpriteBatch batch){
+    public LoginScreen(final Treegrassio game, final SpriteBatch batch){
         this.game = game;
         this.batch = batch;
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
-        TextField button = new TextField("Click me", skin,"default");
-        button.setWidth(200f);
-        button.setHeight(20f);
-        button.setPosition(Gdx.graphics.getWidth() /2 - 100f, Gdx.graphics.getHeight()/2 - 10f);
+        final TextField field = new TextField("", skin,"default");
+        TextButton button = new TextButton("Click me",skin);
+        Image image = new Image(new TextureRegion(new Texture("bubble.png")));
+        Label gameLabel = new Label("Blebbio",skin);
+        field.setWidth(200f);
+        field.setHeight(20f);
+        field.setPosition(Gdx.graphics.getWidth() /2 - 100f, Gdx.graphics.getHeight()/2 - 10f);
+        button.setPosition(field.getX()+field.getWidth()-button.getWidth(),field.getY() - 40f);
+        gameLabel.setPosition(field.getX()+field.getWidth()/2-gameLabel.getWidth()/2,field.getY()+field.getHeight() + 20f);
+        image.setPosition(gameLabel.getX()+gameLabel.getWidth()/2 - image.getWidth()/2,gameLabel.getY()+30);
+        stage.addActor(field);
         stage.addActor(button);
+        stage.addActor(gameLabel);
+        stage.addActor(image);
+        button.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String name = field.getText();
+                game.setScreen(new GameScreen(game,batch,name));
+            }
+        });
         Gdx.input.setInputProcessor(stage);
     }
 
