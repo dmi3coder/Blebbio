@@ -6,7 +6,7 @@ var blebbies = [];
 
 server.listen(8081, function(){
     for(var i = 0; i< 3000; i++){
-        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -500,Math.random()*10000 -500));
+        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -5000,Math.random()*10000 -5000));
 
     }
     console.log("server running");
@@ -63,7 +63,7 @@ io.on('connection',function (socket) {
             }
         }
     });
-    players.push(new player(socket.id, 0.05 ,0,0));
+    players.push(new player(socket.id, 0.25 ,0,0));
 
 });
 
