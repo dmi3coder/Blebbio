@@ -6,6 +6,8 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -34,22 +36,26 @@ public class GameScreen implements Screen {
     private Socket socket;
     private final float SCALE = 10;//WORLD_TO_STAGE_SCALE
     private SpriteBatch batch;
+    private BitmapFont font;
 
     private OrthographicCamera camera, hudCamera;
 
     Bubble player;
     String playerId;
+    String playerName;
     Texture playerBubble;
     Texture friendlyBubble;
     Texture blebbyTexture;
     HashMap<String,Bubble> friendlyPlayers;
     HashMap<String,Blebby> blebbies;
 
-    public GameScreen(Treegrassio game, SpriteBatch batch){
+    public GameScreen(Treegrassio game, SpriteBatch batch,String playerName){
         this.game = game;
         this.batch = batch;
+        this.playerName = playerName;
         playerBubble = new Texture("bubble.png");
         blebbyTexture = new Texture("blebby.png");
+        font = new BitmapFont(Gdx.files.internal("default.fnt"),Gdx.files.internal("default.png"),false);
         blebbies = new HashMap<String, Blebby>();
         friendlyBubble = playerBubble;
         friendlyPlayers = new HashMap<String, Bubble>();
@@ -67,58 +73,6 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void makeMove() {
-        try {
-            double delta = Gdx.graphics.getDeltaTime();
-            Vector3 vector3 = getMousePosInGameWorld();
-            float posX = vector3.x - player.getX();
-            float posY = vector3.y - player.getY();
-            Vector2 vector2 = new Vector2(posX, posY);
-            Vector2 direction = new Vector2();
-            direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
-            direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
-            player.setPosition(
-                    ((Double) (player.getX() + (100 * delta * direction.x))).floatValue(),
-                    ((Double) (player.getY() + (100 * delta * direction.y))).floatValue()
-            );
-        }catch (Exception e ){
-
-        }
-    }
-
-    private void handleInput(float deltaTime) {
-        if(player != null){
-            if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-                player.setPosition(player.getX() + (-200* deltaTime), player.getY());
-            }else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-                player.setPosition(player.getX() + (200* deltaTime), player.getY());
-            }else if(Gdx.input.isKeyPressed(Input.Keys.UP)){
-                player.setPosition(player.getX(), player.getY() + (200 * deltaTime));
-            }else if(Gdx.input.isKeyPressed(Input.Keys.DOWN)){
-                player.setPosition(player.getX(), player.getY() + (-200 * deltaTime));
-            }
-            camera.position.x = player.getX() +player.getWidth()/2;
-            camera.position.y = player.getY() +player.getHeight()/2;
-            if(player.getSize()<1)
-                camera.zoom = 1f;
-            else
-                camera.zoom = player.getSize()*1f;
-        }
-    }
-
-    private void updateServer(float dt){
-        timer += dt;
-        if(timer >= game.UPDATE_TIME && player !=null && player.hasMoved()){
-            JSONObject data = new JSONObject();
-            try {
-                data.put("x",player.getX());
-                data.put("y",player.getY());
-                socket.emit("playerMoved",data);
-            }catch (JSONException e){
-                Gdx.app.log(TAG,"error " + e);
-            }
-        }
-    }
 
 
     @Override
@@ -135,7 +89,10 @@ public class GameScreen implements Screen {
             player.draw(batch);
         }
         for(HashMap.Entry<String,Bubble> entry : friendlyPlayers.entrySet()){
-            entry.getValue().draw(batch);
+            Bubble bub = entry.getValue();
+            bub.draw(batch);
+            GlyphLayout textLayout = new GlyphLayout(font,bub.getName());
+            font.draw(batch,textLayout,bub.getX()+(bub.getWidth()-textLayout.width)/2,bub.getY()+(bub.getHeight())+20);
         }
         try {
             for (HashMap.Entry<String, Blebby> entry : blebbies.entrySet()) {
@@ -173,9 +130,67 @@ public class GameScreen implements Screen {
         makeMove();
     }
 
+
+    private void makeMove() {
+        try {
+            double delta = Gdx.graphics.getDeltaTime();
+            Vector3 vector3 = getMousePosInGameWorld();
+            float posX = vector3.x - player.getX();
+            float posY = vector3.y - player.getY();
+            Vector2 vector2 = new Vector2(posX, posY);
+            Vector2 direction = new Vector2();
+            direction.x = (float) Math.cos(Math.toRadians(vector2.angle()));
+            direction.y = (float) Math.sin(Math.toRadians(vector2.angle()));
+            player.setPosition(
+                    ((Double) (player.getX() + (100 * delta * direction.x))).floatValue(),
+                    ((Double) (player.getY() + (100 * delta * direction.y))).floatValue()
+            );
+        }catch (Exception e ){
+
+        }
+    }
+
+    private void handleInput(float deltaTime) {
+        if(player != null){
+            if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+                player.setPosition(player.getX() + (-200* deltaTime), player.getY());
+            }else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+                player.setPosition(player.getX() + (200* deltaTime), player.getY());
+            }else if(Gdx.input.isKeyPressed(Input.Keys.UP)){
+                player.setPosition(player.getX(), player.getY() + (200 * deltaTime));
+            }else if(Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+                player.setPosition(player.getX(), player.getY() + (-200 * deltaTime));
+            }else if(Gdx.input.isKeyPressed(Input.Keys.A)) {
+            player.increaseSize(1);
+            }
+            camera.position.x = player.getX() +player.getWidth()/2;
+            camera.position.y = player.getY() +player.getHeight()/2;
+            if(player.getSize()<1)
+                camera.zoom = 1f;
+            else
+                camera.zoom = player.getSize()*1f;
+        }
+    }
+
+    private void updateServer(float dt){
+        timer += dt;
+        if(timer >= game.UPDATE_TIME && player !=null && player.hasMoved()){
+            JSONObject data = new JSONObject();
+            try {
+                data.put("x",player.getX());
+                data.put("y",player.getY());
+                socket.emit("playerMoved",data);
+            }catch (JSONException e){
+                Gdx.app.log(TAG,"error " + e);
+            }
+        }
+    }
+
     private void connectSocket() throws Exception {
+        IO.Options options = new IO.Options();
         socket = IO.socket("http://192.168.1.102:8081");
         socket.connect();
+
     }
 
 
@@ -184,7 +199,14 @@ public class GameScreen implements Screen {
             @Override
             public void call(Object... args) {
                 Gdx.app.log("SocketIO","Connected");
-                player = new Bubble(playerBubble);
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("name",playerName);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                socket.emit("setNickname",jsonObject);
+                player = new Bubble(playerBubble,playerName);
             }
         }).on("socketID", new Emitter.Listener() {
             @Override
@@ -205,7 +227,7 @@ public class GameScreen implements Screen {
                     JSONObject data = (JSONObject)args[0];
                     String playerId = data.getString("id");
                     Gdx.app.log(TAG,"New Player connect : "+ playerId);
-                    friendlyPlayers.put(playerId,new Bubble(friendlyBubble));
+                    friendlyPlayers.put(playerId,new Bubble(friendlyBubble,data.getString("name")));
                 } catch (JSONException e) {
                     Gdx.app.log(TAG,"My id: " + e.toString());
                 }
@@ -242,7 +264,7 @@ public class GameScreen implements Screen {
                 JSONArray objects = (JSONArray) args[0];
                 try{
                     for (int i = 0; i < objects.length(); i++) {
-                        Bubble coopPlayer = new Bubble(friendlyBubble);
+                        Bubble coopPlayer = new Bubble(friendlyBubble,objects.getJSONObject(i).getString("name"));
                         Vector2 position = new Vector2();
                         position.x = ((Double)objects.getJSONObject(i).getDouble("x")).floatValue();
                         position.y = ((Double)objects.getJSONObject(i).getDouble("y")).floatValue();
@@ -302,7 +324,7 @@ public class GameScreen implements Screen {
                     size = friendlyPlayers.get(id).getSize();
                     consumerId = blebbyJson.getString("consumer_id");
                     friendlyPlayers.get(consumerId).increaseSize(size);
-                    friendlyPlayers.remove(consumerId);
+                    friendlyPlayers.remove(id);
 
                 } catch (Exception e) {
                     e.printStackTrace();

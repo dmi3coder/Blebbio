@@ -28,7 +28,7 @@ public class Treegrassio extends Game {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		this.setScreen(new LoginScreen(this,batch));
+		this.setScreen(new GameScreen(this,batch,"dmi3coder"));
 	}
 
 
