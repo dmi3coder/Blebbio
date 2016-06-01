@@ -32,16 +32,21 @@ public class LoginScreen implements Screen {
     private Stage stage;
     private Skin skin;
 
+    private TextButton button;
+    private Image image;
+    private Label gameLabel, alertLabel;
+    private TextField field;
+
 
     public LoginScreen(final Treegrassio game, final SpriteBatch batch){
         this.game = game;
         this.batch = batch;
         stage = new Stage(new ScreenViewport());
         skin = new Skin(Gdx.files.internal("uiskin.json"));
-        final TextField field = new TextField("", skin,"default");
-        TextButton button = new TextButton("Click me",skin);
-        Image image = new Image(new TextureRegion(new Texture("bubble.png")));
-        Label gameLabel = new Label("Blebbio",skin);
+        field = new TextField("", skin,"default");
+        button = new TextButton("Click me",skin);
+        image = new Image(new TextureRegion(new Texture("bubble.png")));
+        gameLabel = new Label("Blebbio",skin);
         field.setWidth(200f);
         field.setHeight(20f);
         field.setPosition(Gdx.graphics.getWidth() /2 - 100f, Gdx.graphics.getHeight()/2 - 10f);
@@ -56,6 +61,11 @@ public class LoginScreen implements Screen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String name = field.getText();
+                button.setLayoutEnabled(false);
+                button.remove();
+                image.remove();
+                gameLabel.remove();
+                field.remove();
                 game.setScreen(new GameScreen(game,batch,name));
             }
         });
@@ -65,10 +75,10 @@ public class LoginScreen implements Screen {
     public LoginScreen(final Treegrassio game, final SpriteBatch batch,String alertText,Color alertColor){
         this(game,batch);
         this.alertText = alertText;
-        Label alertLable = new Label(alertText,skin);
-        alertLable.setColor(alertColor);
-        alertLable.setPosition(Gdx.graphics.getWidth()/2-alertLable.getWidth()/2,0);
-        stage.addActor(alertLable);
+        alertLabel = new Label(alertText,skin);
+        alertLabel.setColor(alertColor);
+        alertLabel.setPosition(Gdx.graphics.getWidth()/2-alertLabel.getWidth()/2,0);
+        stage.addActor(alertLabel);
     }
 
     @Override
@@ -93,7 +103,6 @@ public class LoginScreen implements Screen {
 
     @Override
     public void resume() {
-
     }
 
     @Override
@@ -103,7 +112,6 @@ public class LoginScreen implements Screen {
 
     @Override
     public void dispose() {
-
     }
 
     @Override

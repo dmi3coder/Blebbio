@@ -59,7 +59,7 @@ public class GameScreen implements Screen {
 
     public GameScreen(Treegrassio game, SpriteBatch batch,String playerName){
         this.game = game;
-        this.batch = batch;
+        this.batch = new SpriteBatch();
         this.playerName = playerName;
         playerBubble = new Texture("bubble.png");
         blebbyTexture = new Texture("blebby.png");
