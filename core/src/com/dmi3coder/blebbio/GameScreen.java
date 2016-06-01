@@ -1,8 +1,10 @@
 package com.dmi3coder.blebbio;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -22,6 +24,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by dmi3coder on 31/05/16;15:22.
@@ -33,7 +37,11 @@ public class GameScreen implements Screen {
     public static final String TAG = "SocketIO";
     private static final int WIDTH = 1280;
     private static final int HEIGHT = 720;
+    private int connectWaitTime = 20;
+    private String alertText = "Check your internet connection :(";
+    private Color alertColor = Color.RED;
     private Socket socket;
+    private boolean isConected = true;
     private final float SCALE = 10;//WORLD_TO_STAGE_SCALE
     private SpriteBatch batch;
     private BitmapFont font;
@@ -69,7 +77,7 @@ public class GameScreen implements Screen {
             connectSocket();
             configSocketEvents();
         } catch (Exception e) {
-            e.printStackTrace();
+            Gdx.app.log(TAG,"not working", e);
         }
     }
 
@@ -77,8 +85,12 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        if(!isConected) {
+            game.setScreen(new LoginScreen(game, batch, alertText,alertColor));
+        }
         camera.update();
 //        hudCamera.update();
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         handleInput(Gdx.graphics.getDeltaTime());
@@ -90,24 +102,26 @@ public class GameScreen implements Screen {
         }
         for(HashMap.Entry<String,Bubble> entry : friendlyPlayers.entrySet()){
             Bubble bub = entry.getValue();
-            bub.draw(batch);
-            GlyphLayout textLayout = new GlyphLayout(font,bub.getName());
-            font.draw(batch,textLayout,bub.getX()+(bub.getWidth()-textLayout.width)/2,bub.getY()+(bub.getHeight())+20);
+            if(player.isInActionZone(bub)) {
+                bub.draw(batch);
+                GlyphLayout textLayout = new GlyphLayout(font, bub.getName());
+                font.draw(batch, textLayout, bub.getX() + (bub.getWidth() - textLayout.width) / 2, bub.getY() + (bub.getHeight()) + 20);
+            }
         }
         try {
             for (HashMap.Entry<String, Blebby> entry : blebbies.entrySet()) {
                 Blebby blebby = entry.getValue();
-                if (player.contains(blebby.getX(), blebby.getY())) {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("id", entry.getKey());
-                    blebbies.remove(entry.getKey());
-                    socket.emit("eatBlebby", jsonObject);
-                    player.increaseSize();
-
-                } else if(blebby.isVisibile())
-                    blebby.draw(batch);
-                else
-                    blebbies.remove(entry.getKey());
+                if(player.isInActionZone(blebby))
+                    if (player.contains(blebby.getX(), blebby.getY())) {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("id", entry.getKey());
+                        blebbies.remove(entry.getKey());
+                        socket.emit("eatBlebby", jsonObject);
+                        player.increaseSize();
+                    } else if(blebby.isVisibile())
+                            blebby.draw(batch);
+                    else
+                        blebbies.remove(entry.getKey());
             }
             for(HashMap.Entry<String, Bubble> entry: friendlyPlayers.entrySet()){
                 Bubble bubble = entry.getValue();
@@ -187,10 +201,15 @@ public class GameScreen implements Screen {
     }
 
     private void connectSocket() throws Exception {
-        IO.Options options = new IO.Options();
         socket = IO.socket("http://192.168.1.102:8081");
         socket.connect();
-
+        Gdx.app.log(TAG, String.valueOf(socket.connected()));
+        new Timer("connectCheckTimer").schedule(new TimerTask() {
+            @Override
+            public void run() {
+                isConected = socket.connected();
+            }
+        },connectWaitTime * 1000);
     }
 
 
@@ -198,7 +217,6 @@ public class GameScreen implements Screen {
         socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                Gdx.app.log("SocketIO","Connected");
                 JSONObject jsonObject = new JSONObject();
                 try {
                     jsonObject.put("name",playerName);
@@ -319,13 +337,15 @@ public class GameScreen implements Screen {
                 float size;
                 try {
                     id = blebbyJson.getString("id");
-                    if(playerId.equals(id))
-                        Gdx.app.exit();
-                    size = friendlyPlayers.get(id).getSize();
+                    if(playerId.equals(id)) {
+                        isConected = false;
+                        alertText = "Sorry, you died :(";
+                        alertColor = Color.CHARTREUSE;
+                    }
+                    size = ((Double) blebbyJson.getDouble("size")).floatValue();
                     consumerId = blebbyJson.getString("consumer_id");
                     friendlyPlayers.get(consumerId).increaseSize(size);
                     friendlyPlayers.remove(id);
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

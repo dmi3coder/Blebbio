@@ -2,6 +2,7 @@ package com.dmi3coder.blebbio;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -26,16 +27,17 @@ import javax.swing.*;
  */
 public class LoginScreen implements Screen {
     private final Treegrassio game;
+    private String alertText;
     private SpriteBatch batch;
     private Stage stage;
+    private Skin skin;
 
 
     public LoginScreen(final Treegrassio game, final SpriteBatch batch){
         this.game = game;
         this.batch = batch;
         stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage);
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+        skin = new Skin(Gdx.files.internal("uiskin.json"));
         final TextField field = new TextField("", skin,"default");
         TextButton button = new TextButton("Click me",skin);
         Image image = new Image(new TextureRegion(new Texture("bubble.png")));
@@ -58,6 +60,15 @@ public class LoginScreen implements Screen {
             }
         });
         Gdx.input.setInputProcessor(stage);
+    }
+
+    public LoginScreen(final Treegrassio game, final SpriteBatch batch,String alertText,Color alertColor){
+        this(game,batch);
+        this.alertText = alertText;
+        Label alertLable = new Label(alertText,skin);
+        alertLable.setColor(alertColor);
+        alertLable.setPosition(Gdx.graphics.getWidth()/2-alertLable.getWidth()/2,0);
+        stage.addActor(alertLable);
     }
 
     @Override

@@ -64,7 +64,7 @@ io.on('connection',function (socket) {
         for(var i = 0; i<players.length;i++){
             if(players[i].id == data.id){
                 players.splice(i,1);
-                socket.broadcast.emit('eatPlayer',{id: data.id, consumer_id : socket.id});
+                socket.broadcast.emit('eatPlayer',{id: data.id, consumer_id : socket.id, size : data.size});
             }
             else if(players[i].id == socket.id){
                 players[i].size += data.size;
