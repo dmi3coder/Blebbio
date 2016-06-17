@@ -6,7 +6,7 @@ var blebbies = [];
 
 server.listen(8081, function(){
     for(var i = 0; i< 3000; i++){
-        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -5000,Math.random()*10000 -5000));
+        blebbies.push(new blebby(generateUUID(),Math.random()*10000 -5000,Math.random()*10000 -5000,parseInt(Math.random()*0x1000000)));
     }
     players.push(new player("loh","dmi3test2",0.25,0,0));
     console.log("server running");
@@ -27,7 +27,14 @@ io.on('connection',function (socket) {
     console.log("player connected!");
     socket.emit('socketID',{ id : socket.id});
     socket.emit('getPlayers',players);
-    socket.emit('getBlebbies',blebbies);
+    socket.on('getBlebbies',function (data) {
+        var sectionalBlebbies = [];
+        for(var i =0;i<blebbies.length; i++){
+            if(containsInDia(blebbies[i],data.firstX,data.firstY,data.lastX,data.lastY))
+                sectionalBlebbies.push(blebbies[i]);
+        }
+        socket.emit('getBlebbies',sectionalBlebbies);
+    });
     socket.on('playerMoved',function (data) {
        data.id = socket.id;
         socket.broadcast.emit('playerMoved',data);
@@ -84,10 +91,18 @@ function generateUUID(){
     return uuid;
 }
 
-function blebby(id, x, y) {
+function containsInDia(blebby, firstX,firstY,lastX,lastY) {
+    return blebby.x >= firstX 
+        && blebby.x <= lastX 
+        && blebby.y >= firstY
+        && blebby.y <= lastY
+}
+
+function blebby(id, x, y,color) {
     this.id = id;
     this.x = x;
     this.y = y;
+    this.color = color;
 }
 
 function player(id,name, size, x, y) {

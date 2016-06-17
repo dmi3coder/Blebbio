@@ -14,7 +14,6 @@ public class Blebby extends Sprite {
 
     public Blebby(Texture texture){
         super(texture);
-        setColor(new Color((int)(Math.random() * 0x1000000)));
     }
 
     public void setVisible(boolean b){

@@ -56,6 +56,7 @@ public class GameScreen implements Screen {
     Texture blebbyTexture;
     HashMap<String,Bubble> friendlyPlayers;
     HashMap<String,Blebby> blebbies;
+    JSONObject jsonObject;
 
     public GameScreen(Treegrassio game, SpriteBatch batch,String playerName){
         this.game = game;
@@ -91,9 +92,8 @@ public class GameScreen implements Screen {
         camera.update();
 //        hudCamera.update();
 
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        handleInput(Gdx.graphics.getDeltaTime());
         updateServer(Gdx.graphics.getDeltaTime());
         batch.getProjectionMatrix().set(camera.combined);
         batch.begin();
@@ -104,8 +104,7 @@ public class GameScreen implements Screen {
             Bubble bub = entry.getValue();
             if(player.isInActionZone(bub)) {
                 bub.draw(batch);
-                GlyphLayout textLayout = new GlyphLayout(font, bub.getName());
-                font.draw(batch, textLayout, bub.getX() + (bub.getWidth() - textLayout.width) / 2, bub.getY() + (bub.getHeight()) + 20);
+                font.draw(batch, bub.getName(), bub.getX() + (bub.getWidth()) / 2, bub.getY() + (bub.getHeight()) + 20);
             }
         }
         try {
@@ -113,9 +112,9 @@ public class GameScreen implements Screen {
                 Blebby blebby = entry.getValue();
                 if(player.isInActionZone(blebby))
                     if (player.contains(blebby.getX(), blebby.getY())) {
-                        JSONObject jsonObject = new JSONObject();
+                        jsonObject = new JSONObject();
                         jsonObject.put("id", entry.getKey());
-                        blebbies.remove(entry.getKey());
+                        blebby.setVisible(false);
                         socket.emit("eatBlebby", jsonObject);
                         player.increaseSize();
                     } else if(blebby.isVisibile())
@@ -127,7 +126,7 @@ public class GameScreen implements Screen {
                 Bubble bubble = entry.getValue();
                 if(player.contains(bubble.getX() + bubble.getWidth()/2 ,bubble.getY() + bubble.getHeight()/2)){
                     if(player.getSize()>bubble.getSize()*1.2){
-                        JSONObject jsonObject = new JSONObject();
+                        jsonObject = new JSONObject();
                         jsonObject.put("id",entry.getKey());
                         jsonObject.put("size",bubble.getSize());
                         socket.emit("eatPlayer",jsonObject);
@@ -137,8 +136,8 @@ public class GameScreen implements Screen {
                 }
             }
         }
-        catch (Exception e){
-
+        catch (JSONException e){
+            Gdx.app.log("Handle players/blebbies",e.toString());
         }
         batch.end();
         makeMove();
@@ -159,6 +158,12 @@ public class GameScreen implements Screen {
                     ((Double) (player.getX() + (100 * delta * direction.x))).floatValue(),
                     ((Double) (player.getY() + (100 * delta * direction.y))).floatValue()
             );
+            camera.position.x = player.getX() +player.getWidth()/2;
+            camera.position.y = player.getY() +player.getHeight()/2;
+            if(player.getSize()<1)
+                camera.zoom = 1f;
+            else
+                camera.zoom = player.getSize()*1f;
         }catch (Exception e ){
 
         }
@@ -177,12 +182,7 @@ public class GameScreen implements Screen {
             }else if(Gdx.input.isKeyPressed(Input.Keys.A)) {
             player.increaseSize(1);
             }
-            camera.position.x = player.getX() +player.getWidth()/2;
-            camera.position.y = player.getY() +player.getHeight()/2;
-            if(player.getSize()<1)
-                camera.zoom = 1f;
-            else
-                camera.zoom = player.getSize()*1f;
+
         }
     }
 
@@ -194,6 +194,13 @@ public class GameScreen implements Screen {
                 data.put("x",player.getX());
                 data.put("y",player.getY());
                 socket.emit("playerMoved",data);
+                data = new JSONObject();
+                float size = player.getSize()<1 ? 1 : player.getSize();
+                data.put("firstX",player.getX() + player.getOriginX() - Gdx.graphics.getWidth()*size);
+                data.put("lastX",player.getX() + player.getOriginX() + Gdx.graphics.getWidth()*size);
+                data.put("firstY",player.getY() + player.getOriginY() - Gdx.graphics.getHeight()*size);
+                data.put("lastY",player.getY() + player.getOriginY() + Gdx.graphics.getHeight()*size);
+                socket.emit("getBlebbies",data);
             }catch (JSONException e){
                 Gdx.app.log(TAG,"error " + e);
             }
@@ -201,7 +208,7 @@ public class GameScreen implements Screen {
     }
 
     private void connectSocket() throws Exception {
-        socket = IO.socket("http://192.168.1.102:8081");
+        socket = IO.socket("http://localhost:8081");
         socket.connect();
         Gdx.app.log(TAG, String.valueOf(socket.connected()));
         new Timer("connectCheckTimer").schedule(new TimerTask() {
@@ -307,9 +314,11 @@ public class GameScreen implements Screen {
                         position.x = ((Double)blebbiesJson.getJSONObject(i).getDouble("x")).floatValue();
                         position.y = ((Double)blebbiesJson.getJSONObject(i).getDouble("y")).floatValue();
                         blebby.setPosition(position.x,position.y);
+                        blebby.setColor(blebbiesJson.getJSONObject(i).getInt("color"));
                         addingList.put(blebbiesJson.getJSONObject(i).getString("id"),blebby);
                     }
-                    blebbies.putAll(addingList);
+
+                    blebbies = addingList;
                 }catch (JSONException e){
 
                 }
